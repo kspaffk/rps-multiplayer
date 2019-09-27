@@ -1,0 +1,12 @@
+section {
+    display: grid;
+    grid-template-columns: auto auto;
+}
+
+.player-1 {
+    grid-template-columns: 1 / 2;
+}
+
+.player-2 {
+    grid-template-columns: 2 / 3;
+}
