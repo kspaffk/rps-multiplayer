@@ -25,8 +25,6 @@ $(document).ready(function() {
     // local variable to keep track of players
     var isPlayer1 = false;
     var isPlayer2 = false;
-
-    gameInit();
     
     database.ref("/player1").on("value", function(snap) {
         console.log(snap.val());
@@ -35,7 +33,7 @@ $(document).ready(function() {
             createPlayerArea();
         }
     });
-    
+        
     database.ref("/player2").on("value", function(snap) {
         console.log(snap.val());
         if (snap.val()) {
@@ -43,44 +41,28 @@ $(document).ready(function() {
             createPlayerArea();
         }
     });
-
+    
     // get connected info of clients
     connectedRef.on("value", function(snap) {
         console.log("connected ref", snap.val());
         if (snap.val()) {
             var con = connectionsRef.push(true);
             con.onDisconnect().remove();
+            requestPlayer();
         }
     });
     
     // add how many people are on the website here
     connectionsRef.on("value", function(snap) {});
     
-    function gameInit() {
-        if (isPlayer1) {
-            database.ref().update({
-                havePlayer1: false,
-                ties: 0,
-                player1Score: 0,
-                player2Score: 0
-            });
-1        }
-        
-        if (isPlayer2) {
-            database.ref().update({
-                havePlayer2: false,
-                ties: 0,
-                player1Score: 0,
-                player2Score: 0
-            });
-        }
-        requestPlayer();
-    }
     
     // create fields for new players if there arent 2 already
     function requestPlayer() {
         database.ref().once("value").then(function(snap) {
-            console.log("Have player 1? ", snap.val().havePlayer1, " or have player 2? ", snap.val().havePlayer2);
+            console.log(" --- DB --- ");
+            console.log(snap);
+            console.log( " --- DB --- ");
+            // console.log("Have player 1? ", snap.val().player1.name, " or have player 2? ", snap.val().player2.names);
 
             if (!snap.val().havePlayer1) {
                 dbPlayer1.remove();
@@ -139,26 +121,23 @@ $(document).ready(function() {
 
         if (this.id == 1) {
             isPlayer1 = true;
-            dbPlayer1.set({
+            dbPlayer1.update({
                 name: $("#player1-name").val(),
                 score: 0
             });
-            database.ref().update({
-                havePlayer1: true
-            });
+            dbPlayer1.onDisconnect().remove();
         }
         if (this.id == 2) {
             isPlayer2 = true;
-            dbPlayer2.set({
+            dbPlayer2.update({
                 name: $("#player2-name").val(),
                 score: 0
             });
-            database.ref().update({
-                havePlayer2: true
-            });
+            dbPlayer2.onDisconnect().remove();
         }
         console.log("player 1? ", isPlayer1, " or Player 2? ", isPlayer2);
     }
+
 
     // create player area for either player 1 or 2
     function createPlayerArea() {
@@ -188,6 +167,7 @@ $(document).ready(function() {
             btnsDiv.append(nameDiv).append(rockBtn, paperBtn, scissorsBtn);
             $(".player2").append(btnsDiv);
         }
+
     }
 
     // clear out the player areas and create a score area for people to watch
