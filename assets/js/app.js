@@ -26,6 +26,7 @@ $(document).ready(function() {
     // local variable to keep track of players
     var isPlayer1 = false;
     var isPlayer2 = false;
+    var timer;
     
     dbPlayers.on("value", function(snap) {
         console.log(snap.val());
@@ -48,34 +49,43 @@ $(document).ready(function() {
 
     // function to check the status of the game
     function checkGameStatus() {
+        $(".player1 form").remove();
+        $(".player2 form").remove();
         database.ref().once("value").then(function(snap) {
+            console.log("database look ", snap.val());
             // both players are chosen
-            if (snap.val().player1 != undefined && snap.val().player2 != undefined) {
+            if (snap.val().players.player1 != undefined && snap.val().players.player2 != undefined) {
                 createScoreboard();
+                assignRPStoPlayer();
                 return "both";
             }
             // neither players are chosen
-            else if (snap.val().player1 === undefined && snap.val().player2 === undefined) {
+            else if (snap.val().players.player1 === undefined && snap.val().players.player2 === undefined) {
                 requestPlayer1();
                 requestPlayer2();
-                waitingForPlayers();
+                waitingForPlayers(2);
                 return "neither";
             }
             // only player 1 is chosen
-            else if (snap.val().player1 != undefined) {
-                requestPlayer2();
-                waitingForPlayers();
+            else if (snap.val().players.player1 != undefined) {
+                waitingForPlayers(1);
+                if (!isPlayer1) {
+                    requestPlayer2();
+                }
                 return "player1";
             }
             // otherwise just player 2 is chosen
             else {
-                requestPlayer1();
-                waitingForPlayers();
+                waitingForPlayers(1);
+                if (!isPlayer2) {
+                    requestPlayer1();
+                }
                 return "player2"
             }
         });
     }
 
+    // create the generic player form for new players
     function createPlayerForm() {
         // create generic form for player input
         var form = $("<form>");
@@ -91,10 +101,11 @@ $(document).ready(function() {
     }
     
     
-    // create fields for new players if there arent 2 already
+    // create player 1 field for new players
     function requestPlayer1() {
         // create specific attr and classes for player 1
         console.log("/player1 doesnt exist");
+        $(".player1").empty();
         var playerForm = createPlayerForm();
         $(".player1").append(playerForm);
         $(".player1 label").attr("for", "player1-name").text("Player 1: ");
@@ -106,9 +117,11 @@ $(document).ready(function() {
         $("#submit-1").on("click", addPlayer);
     }
 
+    //create player 2 field for new players
     function requestPlayer2() {
         // create specific attr and classes for player 2
         console.log("/player2 doesnt exist");
+        $(".player2").empty();
         var playerForm = createPlayerForm();
         $(".player2").append(playerForm);
         $(".player2 label").attr("for", "player2-name").text("Player 2: ");
@@ -121,24 +134,39 @@ $(document).ready(function() {
     }
 
     // create waiting for players notification
-    function waitingForPlayers() {
+    function waitingForPlayers(num) {
         $(".no-scores").show();
         $(".scores").hide();
-        $(".no-scores").html("<div class='waiting'>Waiting for two players!</div>");
+        if (num === 2) {
+            $(".no-scores").html("<div class='waiting'>Waiting for two players!</div>");
+        } else {
+            $(".no-scores").html("<div class='waiting'>Waiting for one more player!</div>");
+        }
     }
 
+    // create scoreboard 
     function createScoreboard () {
-        $(".no-scores").hide();
-        $(".scores").show();
-        console.log("check scoreboard ran -----");
-        $(".scores").empty();
-        var tie = $("<div>").addClass("tie").text("tie: " + snap.val().tie);
-        var plyr1score = $("<div>").addClass("player1-score").text(snap.val().player1.name + ": " + snap.val().player1.score);
-        var plyr2score = $("<div>").addClass("player2-score").text(snap.val().player2.name + ": " + snap.val().player2.score);
-                
-        $(".scores").append(plyr1score, tie, plyr2score);
+        dbPlayers.once("value").then(function(snap) {
+            $(".no-scores").hide();
+            $(".scores").show();
+            console.log("check scoreboard ran -----");
+            $(".scores").empty();
+            var tie = $("<div>").addClass("tie").text("tie: " + snap.val().tie);
+            var plyr1score = $("<div>").addClass("player1-score").text(snap.val().player1.name + ": " + snap.val().player1.score);
+            var plyr2score = $("<div>").addClass("player2-score").text(snap.val().player2.name + ": " + snap.val().player2.score);
+                    
+            $(".scores").append(plyr1score, tie, plyr2score);
+
+            var p1Name = $("<div>").addClass("name-div").attr("id", "player1-name").text(snap.val().player1.name);
+            $(".player1").prepend(p1Name);
+            var p2Name = $("<div>").addClass("name-div").attr("id", "player2-name").text(snap.val().player2.name);
+            $(".player2").prepend(p2Name);
+
+            createTimer();
+        });
     }
-        
+    
+    // add player to database and disconnect functionality
     function addPlayer(event) {
         event.preventDefault();
         // add tie score variable
@@ -168,36 +196,59 @@ $(document).ready(function() {
         console.log("player 1? ", isPlayer1, " or Player 2? ", isPlayer2);
     }
     
-    
-    // create player area for either player 1 or 2
-    function createPlayerArea() {
-        database.ref().once("value").then(function(snap) {
-            var btnsDiv = $("<div>").addClass("btns-div");
-            var rockBtn = $("<button>")
+    // create the rock paper scissors buttons
+    function createRPS() {
+        var rpsDiv = $("<div>").addClass("rps-div");
+        var rpsTextDiv = $("<div>").addClass("announcement").text("Choose rock, paper or scissors within 5 seconds!");
+        var rock = $("<button>")
             .addClass("rock")
             .text("Rock");
-            var paperBtn = $("<button>")
+        var paper = $("<button>")
             .addClass("paper")
             .text("Paper");
-            var scissorsBtn = $("<button>")
+        var scissors = $("<button>")
             .addClass("scissors")
             .text("Scissors");
-            
-            if (isPlayer1) {            
-                var nameDiv = $("<div>").addClass("name-div");
-                nameDiv.text(snap.val().player1.name);
-                $(".player1").empty();
-                btnsDiv.append(nameDiv).append(rockBtn, paperBtn, scissorsBtn);
-                $(".player1").append(btnsDiv);
-            } else if (isPlayer2) {
-                var nameDiv = $("<div>").addClass("name-div");
-                nameDiv.text(snap.val().player2.name);
-                $(".player2").empty();
-                btnsDiv.append(nameDiv).append(rockBtn, paperBtn, scissorsBtn);
-                $(".player2").append(btnsDiv);
-            }            
-        });        
+
+        rpsDiv.append(rpsTextDiv, rock, paper, scissors)
+
+        return rpsDiv;
     }
     
+    // assign the RPS buttons to player and create specific values for buttons per player
+    function assignRPStoPlayer() {
+        var rpsDiv = createRPS();
+        if (isPlayer1) {            
+            $(".player1").append(rpsDiv);
+            $(".player1 .rock").attr("id", "rock-1");
+            $(".player1 .paper").attr("id", "paper-1");
+            $(".player1 .scissors").attr("id", "scissors-1");
+        } else if (isPlayer2) {
+            $(".player2").append(rpsDiv);
+            $(".player2").append(rpsDiv);
+            $(".player2 .rock").attr("id", "rock-2");
+            $(".player2 .paper").attr("id", "paper-2");
+            $(".player2 .scissors").attr("id", "scissors-2");
+        }
+    }
+
+    function createTimer() {
+        var seconds = 5;
+
+        for (var i = 1; i < 3; i++) {
+            var timerDiv = $("<div>").addClass("timer");
+            var nameId = "#player" + i + "-name";
+            $(nameId).append(timerDiv);
+        }
+
+        timer = setInterval(function(){
+            $(".timer").text(seconds);
+            seconds--;
+
+            if (seconds < 0) {
+                clearInterval(timer);
+            }
+        }, 1000);
+    }
 });
 
