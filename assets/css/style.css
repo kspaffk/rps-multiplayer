@@ -4,22 +4,22 @@ body {
     line-height: 1.8em;
 }
 
-form {
+.player-form {
     margin-left: 25px;
 }
 
-label {
+.name-label {
     padding: 5px;
     margin: 5px;
 }
 
-input {
+.name-input {
     padding: 10px;
     margin: 5px;
     font-family: 'Fjalla One', sans-serif;
 }
 
-button {
+.player-submit {
     padding: 10px;
     background-color: #2d2da0;
     color: white;
@@ -77,20 +77,15 @@ button {
     border-left: dotted 2px #4444f2;
 }
 
-.players {
+.player-section {
     display: grid;
     grid-template-columns: auto auto;
     grid-template-rows: 200px auto 400px;
     padding-top: 30px;
 }
 
-.player-1 {
+.rps-choice {
     grid-column: 1 / 2;
-    grid-row: 1 / 2;
-}
-
-.player-2 {
-    grid-column: 2 / 3;
     grid-row: 1 / 2;
 }
 
@@ -119,3 +114,50 @@ button {
 
 }
 
+.results-box {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    overflow: auto;
+    width: 80%;
+}
+
+.chatbox {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+    overflow: auto;
+    width: 80%;
+}
+
+.chatview {
+    display: block;
+    height: 100px;
+    border: 1px solid gray;
+    font-size: 12px;
+    line-height: 14px;
+    overflow: auto;
+}
+
+.chat-input {
+    padding: 5px;
+    margin: 5px;
+    font-family: 'Fjalla One', sans-serif;
+    font-size: 14px;
+    line-height: 16px;
+    width: 75%
+}
+
+#watcher {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    margin-left: 25px;
+}
+
+#chat-submit {
+    padding: 5px;
+    background-color: #2d2da0;
+    color: white;
+    font-family: 'Fjalla One', sans-serif;
+    font-size: 16px;
+    border: none;
+    margin: 5px;
+}

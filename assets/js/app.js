@@ -17,6 +17,7 @@ var dbPlayer1 = database.ref("/players/player1");
 var dbPlayer2 = database.ref("/players/player2");
 var dbScores = database.ref("/scores");
 var dbAnswers = database.ref("/answers");
+var dbChat = database.ref("/chat");
 // create location for connections in database
 var connectionsRef = database.ref("/connections");
 var connectedRef = database.ref(".info/connected");
@@ -44,10 +45,12 @@ $(document).ready(function() {
                 player1: "none",
                 player2: "none"
             });
-            // assign rock paper scissors buttons to players
-            assignRPStoPlayer();
-            // start the timer
-            startTimer();
+            if (isPlayer1 || isPlayer2) {
+                // assign rock paper scissors buttons to players
+                assignRPStoPlayer();
+                // start the timer
+                startTimer();
+            }
         } else {
             // clear out rock paper scissors buttons as someone dropped
             clearRPSDiv();
@@ -71,67 +74,77 @@ $(document).ready(function() {
     // function to check the status of the game
     function checkGameStatus() {
         // remove form as another form will be created if needed
-        $(".player1 form").remove();
-        $(".player2 form").remove();
+        $(".player-form").remove();
         // reference the database for values
         database.ref().once("value").then(function(snap) {
             // if players parent exists
             if (snap.val().players != undefined) {
                 // if both players exist
                 if (snap.val().players.player1 != undefined && snap.val().players.player2 != undefined) {
+                    createChatbox();
                     if (isPlayer1 || isPlayer2) {
-                        // has the game started with 2 players?
-                        console.log("--!! initialized is true !!--")
                         // initializie scores
                         initializeScores();
                         // create timer divs
                         createTimers();
+                        // create a chat box
+                        // create a results section
+                        var resultsDiv = $("<div>").addClass("results-box");
+                        $(".player-section").append(resultsDiv);                
                     }
                     return "both";
                 }
                 // neither players are chosen
                 else if (snap.val().players.player1 === undefined && snap.val().players.player2 === undefined) {
-                    // has the game started with 2 players?
-                    $(".player1").empty();
-                    $(".player2").empty();
+                    // clear out the interval timer if exists
+                    clearInterval(timer);
+                    $(".timer").remove();
+                    $(".chatbox").remove();
                     // neither player has joined - request both players
-                    requestPlayer1();
-                    requestPlayer2();
+                    requestPlayer();
                     // add notice that we are waiting on players
                     waitingForPlayers(2);
                     return "neither";
                 }
                 // only player 1 is chosen
                 else if (snap.val().players.player1 != undefined) {
-                    // has the game started with 2 players?
-                    $(".player1").empty();
-                    $(".player2").empty();
+                    // clear out the interval timer if exists
+                    clearInterval(timer);
+                    $(".timer").remove();
+                    $(".chatbox").remove();
                     // add notice that we are waiting on players
                     waitingForPlayers(1);
+                    // if user is not player 1, request player 
                     if (!isPlayer1) {
-                        requestPlayer2();
+                        requestPlayer();
+                    } else {
+                        $(".results-box").remove();
                     }
                     return "player1";
                 }
                 // otherwise just player 2 is chosen
                 else {
-                    // has the game started with 2 players?
-                    $(".player1").empty();
-                    $(".player2").empty();
+                    // clear out the interval timer if exists
+                    clearInterval(timer);
+                    $(".timer").remove();
+                    $(".chatbox").remove();
                     // add notice that we are waiting on players
                     waitingForPlayers(1);
+                    // if user is not player 2, request player
                     if (!isPlayer2) {
-                        requestPlayer1();
+                        requestPlayer();
+                    } else {
+                        $(".results-box").remove();
                     }
                     return "player2"
                 }
             } else {
-                // has the game started with 2 players?
-                $(".player1").empty();
-                $(".player2").empty();
-                // neither player has joined - request for both players
-                requestPlayer1();
-                requestPlayer2();
+                // clear out the interval timer if exists
+                clearInterval(timer);
+                $(".timer").remove();
+                $(".chatbox").remove();
+                // neither player has joined - request players
+                requestPlayer();
                 // add notice that we are waiting on players
                 waitingForPlayers(2);
                 return "neither";
@@ -142,13 +155,13 @@ $(document).ready(function() {
     // create the generic player form for new players
     function createPlayerForm() {
         // create generic form for player input
-        var form = $("<form>");
+        var form = $("<form>").addClass("player-form");
         var labelName = $("<label>").addClass("name-label");
         var inputName = $("<input>").addClass("name-input").attr({
             type: "text",
             placeholder: "Enter your name"
         });
-        var submitBtn = $("<button>").addClass("submit-btn").text("Enter Game");
+        var submitBtn = $("<button>").addClass("submit-btn player-submit").text("Enter Game");
 
         form.append(labelName, inputName, submitBtn);
         return form;
@@ -156,64 +169,50 @@ $(document).ready(function() {
     
     
     // create player 1 field for new players
-    function requestPlayer1() {
+    function requestPlayer() {
         // create specific attr and classes for player 1
         console.log("/player1 doesnt exist");
-        $(".player1").empty();
+        $(".player-section").empty();
         var playerForm = createPlayerForm();
-        $(".player1").append(playerForm);
-        $(".player1 label").attr("for", "player1-name").text("Player 1: ");
-        $(".player1 input").attr("id", "player1-name");
-        $(".player1 button").attr({
-            id: "submit-1",
-            value: "1"
-        });
-        $("#submit-1").on("click", addPlayer);
-    }
-
-    //create player 2 field for new players
-    function requestPlayer2() {
-        // create specific attr and classes for player 2
-        console.log("/player2 doesnt exist");
-        $(".player2").empty();
-        var playerForm = createPlayerForm();
-        $(".player2").append(playerForm);
-        $(".player2 label").attr("for", "player2-name").text("Player 2: ");
-        $(".player2 input").attr("id", "player2-name");
-        $(".player2 button").attr   ({
-            id: "submit-2",
-            value: "2"
-        });
-        $("#submit-2").on("click", addPlayer);
+        $(".player-section").append(playerForm);
+        $(".player-section label").attr("for", "player-name").text("Player: ");
+        $(".player-section input").attr("id", "player-name");
+        
+        $(".player-submit").on("click", addPlayer);
     }
 
     // add player to database and disconnect functionality
     function addPlayer(event) {
+        // prevent the submit button default behavior
         event.preventDefault();
-        // add player 1 to db
-        if (this.value == 1) {
-            isPlayer1 = true;
-            var playerName = $("#player1-name").val();
-            dbPlayer1.set({
-                name: playerName,
-            });
-            dbPlayer1.onDisconnect().remove();
-            dbAnswers.set({
-                player1: "none"
-            });
-        }
-        // add player 2 to db
-        if (this.value == 2) {
-            isPlayer2 = true;
-            var playerName = $("#player2-name").val();
-            dbPlayer2.set({
-                name: playerName,
-            });
-            dbPlayer2.onDisconnect().remove();
-            dbAnswers.set({
-                player2: "none"
-            });
-        }
+        // get data from the database
+        dbPlayers.once("value").then(function(snap) {
+            // add player 1 to db if doesnt exist
+            if (snap.val() === null || snap.val().player1 === undefined) {
+                isPlayer1 = true;
+                var playerName = $("#player-name").val();
+                dbPlayer1.set({
+                    name: playerName,
+                });
+                dbPlayer1.onDisconnect().remove();
+                // set inital value for answer
+                dbAnswers.set({
+                    player1: "none"
+                });
+            } else {
+                // add player 2 to db
+                isPlayer2 = true;
+                var playerName = $("#player-name").val();
+                dbPlayer2.set({
+                    name: playerName,
+                });
+                dbPlayer2.onDisconnect().remove();
+                // set inital value for answer
+                dbAnswers.set({
+                    player2: "none"
+                });
+            }
+        });
     }
 
     // create waiting for players notification
@@ -223,7 +222,11 @@ $(document).ready(function() {
         if (num === 2) {
             $(".no-scores").html("<div class='waiting'>Waiting for two players!</div>");
         } else {
-            $(".no-scores").html("<div class='waiting'>Waiting for one more player!</div>");
+            if (isPlayer1 || isPlayer2) {
+                $(".no-scores").html("<div class='waiting'>Please wait. We are looking for another player!</div>");
+            } else {
+                $(".no-scores").html("<div class='waiting'>Waiting for one more player!</div>");
+            }
         }
     }
 
@@ -254,8 +257,8 @@ $(document).ready(function() {
     
     // create the rock paper scissors buttons
     function createRPS() {
-        var rpsDiv = $("<div>").addClass("rps-div");
-        var rpsTextDiv = $("<div>").addClass("announcement").text("Choose rock, paper or scissors within 5 seconds!");
+        var rpsDiv = $("<div>").addClass("rps-choice");
+        var rpsTextDiv = $("<div>").addClass("announcement").text("Choose rock, paper or scissors within 6 seconds!");
         var rock = $("<img>")
             .addClass("rock rps-button")
             .attr({
@@ -286,42 +289,24 @@ $(document).ready(function() {
     // assign the RPS buttons to player and create specific values for buttons per player
     function assignRPStoPlayer() {
         var rpsDiv = createRPS();
-        if (isPlayer1) {            
-            $(".player1").append(rpsDiv);
-            $(".player1 .rock").attr({
-                id: 1,
-                value: "rock"
-            });
-            $(".player1 .paper").attr({
-                id: 1,
-                value: "paper"
-            });
-            $(".player1 .scissors").attr({
-                id: 1,
-                value: "scissors"
-            });
-        } else if (isPlayer2) {
-            $(".player2").append(rpsDiv);
-            $(".player2 .rock").attr({
-                id: 2,
-                value: "rock"
-            });
-            $(".player2 .paper").attr({
-                id: 2,
-                value: "paper"
-            });
-            $(".player2 .scissors").attr({
-                id: 2,
-                value: "scissors"
-            });
-        }
+        $(".player-section").append(rpsDiv);
+        $(".rps-choice .rock").attr({
+            value: "rock"
+        });
+        $(".rps-choice .paper").attr({
+            value: "paper"
+        });
+        $(".rps-choice .scissors").attr({
+            value: "scissors"
+        });
+
         console.log("-----running assignRPS -----")
         $(".rps-button").on("click", rpsClick)
     }
 
     // clear the rock paper scissors buttons 
     function clearRPSDiv() {
-        $(".rps-div").remove();
+        $(".rps-choice").remove();
     }
     
     // update db when rock paper scissors are clicked
@@ -329,13 +314,13 @@ $(document).ready(function() {
         console.log("----- value of button -----")
         console.log(this.alt)
         if (isPlayer1) {
-            $(".rps-div").remove();
+            $(".rps-choice").remove();
             dbAnswers.update({
                 player1: this.alt,
             });
         }
         if (isPlayer2) {
-            $(".rps-div").remove();
+            $(".rps-choice").remove();
             dbAnswers.update({
                 player2: this.alt,
             });
@@ -351,7 +336,7 @@ $(document).ready(function() {
             var timerDiv = $("<div>").addClass("timer");
             var timerTxt = $("<div>").addClass("timer-text");
             $(timerDiv).append(timerTxt);
-            $(".players").append(timerDiv);
+            $(".player-section").append(timerDiv);
         }
     }
     
@@ -528,5 +513,63 @@ $(document).ready(function() {
         }
     });
     
-});
+    function createChatbox() {
+        var chatbox = $("<div>").addClass("chatbox");
+        var chatview = $("<div>").addClass("chatview");
+        var chatForm = $("<form>").addClass("chat-form");
+        var chatInput = $("<input>").addClass("chat-input").attr({
+            type: "text",
+            placeholder: "Talk smack to your oppontent!"
+        })
+        var submitBtn = $("<button>").addClass("submit-btn").attr("id", "chat-submit").text("Enter");
+        
+        chatForm.append(chatInput, submitBtn);
+        chatbox.append(chatview, chatForm);
 
+        
+        $(".player-section").append(chatbox);
+        
+        if (!isPlayer1 && !isPlayer2) {
+            console.log("ran is not player1 or player2 for chatbox watcher")
+            $(".chatbox").attr("id", "watcher");
+        }
+
+        $("#chat-submit").on("click", function(event) {
+            event.preventDefault();
+            var chatMsgOwner = "Watcher";
+            dbPlayers.once("value").then(function(snap) {
+                if (isPlayer1) {
+                    chatMsgOwner = snap.val().player1.name;
+                } else if (isPlayer2) {
+                    chatMsgOwner = snap.val().player2.name;
+                }
+                var chatVal = $(".chat-input").val();
+                var chatMsgAll = chatMsgOwner + ": " + chatVal;
+    
+                dbChat.set({
+                    chat: chatMsgAll,
+                });
+            });           
+        });
+    }
+
+    dbChat.on("value", function(snapchat) {
+        if (snapchat.val() != null) {
+            if (snapchat.val().chat != "") {
+                var chatMsg = $("<p>").addClass("chat-msg");
+                chatMsg.text(snapchat.val().chat);
+                
+                $(".chatview").append(chatMsg);
+
+                var scrollHeight;
+                scrollHeight = $(".chatview").prop('scrollHeight');
+                console.log(scrollHeight + " is scrollHeight");
+                $(".chatview").scrollTop(scrollHeight);
+                $(".chat-input").val("");
+                
+                dbChat.remove();
+            }
+        }
+    });
+
+});
