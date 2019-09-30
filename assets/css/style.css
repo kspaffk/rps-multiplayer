@@ -119,6 +119,7 @@ body {
     grid-row: 1 / 2;
     overflow: auto;
     width: 80%;
+    margin: 20px;
 }
 
 .chatbox {
@@ -126,6 +127,7 @@ body {
     grid-row: 2 / 3;
     overflow: auto;
     width: 80%;
+    margin: 20px;
 }
 
 .chatview {
