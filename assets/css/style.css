@@ -4,6 +4,12 @@ body {
     line-height: 1.8em;
 }
 
+header {
+    background-color: #0f1114;
+    display: flex;
+    justify-content: center;
+}
+
 .player-form {
     margin-left: 25px;
 }
