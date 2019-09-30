@@ -28,7 +28,6 @@ $(document).ready(function() {
     var isPlayer1 = false;
     var isPlayer2 = false;
     var timer;
-    hasInitialized = false;
     
     // when players are added or removed update the game status
     dbPlayers.on("value", checkGameStatus);
@@ -36,14 +35,21 @@ $(document).ready(function() {
     // when scores change update scoreboard and answers
     dbScores.on("value", function(snap) {
         if (snap.val() != null) {
+            // clear out the timer for all players
+            clearInterval(timer);
+            // update the scoreboard
             updateScoreboard();
+            // clear out the answers
             dbAnswers.update({
                 player1: "none",
                 player2: "none"
             });
+            // assign rock paper scissors buttons to players
             assignRPStoPlayer();
-            // startTimer();
+            // start the timer
+            startTimer();
         } else {
+            // clear out rock paper scissors buttons as someone dropped
             clearRPSDiv();
         }
     });
@@ -75,26 +81,19 @@ $(document).ready(function() {
                 if (snap.val().players.player1 != undefined && snap.val().players.player2 != undefined) {
                     if (isPlayer1 || isPlayer2) {
                         // has the game started with 2 players?
-                        hasInitialized = true;
                         console.log("--!! initialized is true !!--")
-                        // set player names
-                        // first clear our names
-                        $(".name-div").remove();
-                        var p1Name = $("<div>").addClass("name-div").attr("id", "player1-name").text(snap.val().players.player1.name);
-                        $(".player1").prepend(p1Name);
-                        var p2Name = $("<div>").addClass("name-div").attr("id", "player2-name").text(snap.val().players.player2.name);
-                        $(".player2").prepend(p2Name);
                         // initializie scores
                         initializeScores();
                         // create timer divs
-                        // createTimers();
+                        createTimers();
                     }
                     return "both";
                 }
                 // neither players are chosen
                 else if (snap.val().players.player1 === undefined && snap.val().players.player2 === undefined) {
                     // has the game started with 2 players?
-                    hasInitialized = false;
+                    $(".player1").empty();
+                    $(".player2").empty();
                     // neither player has joined - request both players
                     requestPlayer1();
                     requestPlayer2();
@@ -105,7 +104,8 @@ $(document).ready(function() {
                 // only player 1 is chosen
                 else if (snap.val().players.player1 != undefined) {
                     // has the game started with 2 players?
-                    hasInitialized = false;
+                    $(".player1").empty();
+                    $(".player2").empty();
                     // add notice that we are waiting on players
                     waitingForPlayers(1);
                     if (!isPlayer1) {
@@ -116,7 +116,8 @@ $(document).ready(function() {
                 // otherwise just player 2 is chosen
                 else {
                     // has the game started with 2 players?
-                    hasInitialized = false;
+                    $(".player1").empty();
+                    $(".player2").empty();
                     // add notice that we are waiting on players
                     waitingForPlayers(1);
                     if (!isPlayer2) {
@@ -126,7 +127,8 @@ $(document).ready(function() {
                 }
             } else {
                 // has the game started with 2 players?
-                hasInitialized = false;
+                $(".player1").empty();
+                $(".player2").empty();
                 // neither player has joined - request for both players
                 requestPlayer1();
                 requestPlayer2();
@@ -212,7 +214,6 @@ $(document).ready(function() {
                 player2: "none"
             });
         }
-        console.log("player 1? ", isPlayer1, " or Player 2? ", isPlayer2);
     }
 
     // create waiting for players notification
@@ -242,11 +243,12 @@ $(document).ready(function() {
             $(".scores").show();
             $(".no-scores").hide();
             $(".scores").empty();
+            var scoreHeader = $("<div>").addClass("scores-header").text("---- Scores ----");
             var tie = $("<div>").addClass("tie").text("tie: " + snap.val().scores.tie);
             var plyr1score = $("<div>").addClass("player1-score").text(snap.val().players.player1.name + ": " + snap.val().scores.player1);
             var plyr2score = $("<div>").addClass("player2-score").text(snap.val().players.player2.name + ": " + snap.val().scores.player2);
                     
-            $(".scores").append(plyr1score, tie, plyr2score);
+            $(".scores").append(scoreHeader, plyr1score, tie, plyr2score);
         });
     }
     
@@ -254,17 +256,29 @@ $(document).ready(function() {
     function createRPS() {
         var rpsDiv = $("<div>").addClass("rps-div");
         var rpsTextDiv = $("<div>").addClass("announcement").text("Choose rock, paper or scissors within 5 seconds!");
-        var rock = $("<button>")
+        var rock = $("<img>")
             .addClass("rock rps-button")
+            .attr({
+                src: "assets/img/rock.png",
+                alt: "rock"
+            })
             .text("Rock");
-        var paper = $("<button>")
+        var paper = $("<img>")
             .addClass("paper rps-button")
+            .attr({
+                src: "assets/img/paper.png",
+                alt: "paper"
+            })
             .text("Paper");
-        var scissors = $("<button>")
+        var scissors = $("<img>")
             .addClass("scissors rps-button")
+            .attr({
+                src: "assets/img/scissors.png",
+                alt: "scissors"
+            })
             .text("Scissors");
 
-        rpsDiv.append(rpsTextDiv, rock, paper, scissors)
+        rpsDiv.append(rpsTextDiv, rock, paper, scissors);
 
         return rpsDiv;
     }
@@ -301,7 +315,7 @@ $(document).ready(function() {
                 value: "scissors"
             });
         }
-
+        console.log("-----running assignRPS -----")
         $(".rps-button").on("click", rpsClick)
     }
 
@@ -309,60 +323,86 @@ $(document).ready(function() {
     function clearRPSDiv() {
         $(".rps-div").remove();
     }
-
-    // // create a timer for the game
-    // function createTimers() {
-    //     // create divs for timers and attach them to players
-    //     for (var i = 1; i < 3; i++) {
-    //         var timerDiv = $("<div>").addClass("timer");
-    //         var nameId = "#player" + i + "-name";
-    //         $(nameId).append(timerDiv);
-    //     }
-
-    // }
-
-    // // start the timer
-    // function startTimer() {
-    //     // set the number of seconds to countdown
-    //     var seconds = 5;
-    //     // start timer until it reaches 0
-    //     timer = setInterval(function(){
-    //         $(".timer").text(seconds);
-    //         seconds--;
-
-    //         if (seconds < 0) {
-    //             clearInterval(timer);
-    //             seconds = 5;
-    //             $(".rps-div").remove();
-
-    //             dbScores.once("value").then(function(snap) {
-    //                 var pTie = snap.val().tie
-    //                 pTie++;
-    //                 dbScores.update({
-    //                     tie: pTie
-    //                 });
-    //             });
-
-    //         }
-    //     }, 1000);
-
-    // }
-
+    
     // update db when rock paper scissors are clicked
     function rpsClick() {
+        console.log("----- value of button -----")
+        console.log(this.alt)
         if (isPlayer1) {
             $(".rps-div").remove();
             dbAnswers.update({
-                player1: this.value,
+                player1: this.alt,
             });
         }
         if (isPlayer2) {
             $(".rps-div").remove();
             dbAnswers.update({
-                player2: this.value,
+                player2: this.alt,
             });
         }
         checkAnswers();
+    }
+
+    // create a timer for the game
+    function createTimers() {
+        // only for the players
+        if (isPlayer1 || isPlayer2) {
+            // create divs for timers and attach them to players
+            var timerDiv = $("<div>").addClass("timer");
+            var timerTxt = $("<div>").addClass("timer-text");
+            $(timerDiv).append(timerTxt);
+            $(".players").append(timerDiv);
+        }
+    }
+    
+    // start the timer
+    function startTimer() {
+        if (isPlayer1 || isPlayer2) {
+            // set the number of seconds to countdown
+            var seconds;
+            seconds = 6;
+            // start timer until it reaches 0
+            timer = setInterval(function(){
+                $(".timer-text").text(seconds);
+                seconds--;
+
+                if (seconds < 0) {
+                    clearInterval(timer);
+                    clearRPSDiv();
+                    console.log("---- timeout ----")
+                    $(".timer-text").text("Time's up!!");
+                    setTimeout(function() {
+                        if (isPlayer1) {
+                            database.ref().once("value").then(function(snap) {
+                                if (snap.val().answers.player1 != "none") {
+                                    var ply1score = snap.val().scores.player1;
+                                    ply1score++; 
+                                    dbScores.update({
+                                        player1: ply1score
+                                    });
+                                } else if (snap.val().answers.player2 != "none") {
+                                    var ply2score = snap.val().scores.player2;
+                                    ply2score++;
+                                    dbScores.update({
+                                        player2: ply2score
+                                    });
+                                } else {
+                                    var pTie = snap.val().scores.tie;
+                                    pTie++;
+                                    dbScores.update({
+                                        tie: pTie
+                                    });
+                                }
+                            });
+                        }
+                        if (isPlayer2) {
+                            console.log("---waiting for timeout---");
+                        }
+                    }, 1000);
+
+                }
+            }, 1000);
+        }
     }
 
     // check database for rps answers and evaluate if both entered
@@ -383,6 +423,7 @@ $(document).ready(function() {
             if (p1Ans === "none" || p2Ans === "none") {
                 return false;
             }
+
             if (p1Ans === "rock") {
                 if (p2Ans === "rock") {
                     dbScores.update({
@@ -434,5 +475,58 @@ $(document).ready(function() {
             }
         });
     }
+
+    function youWon() {
+        var winDiv = $("<div>").addClass("results").text("You won!");
+        $(".results-box").prepend(winDiv);
+    }
+
+    function youLost() {
+        var lostDiv = $("<div>").addClass("results").text("You lost!");
+        $(".results-box").prepend(lostDiv);
+    }
+
+    function youTied() {
+        var tieDiv = $("<div>").addClass("results").text("You tied!");
+        $(".results-box").prepend(tieDiv);
+    }
+
+    var dbP1Score = database.ref("/scores/player1");
+    var dbP2Score = database.ref("/scores/player2");
+    var dbTieScore = database.ref("/scores/tie");
+
+    dbP1Score.on("value", function(snap){
+        if (snap.val() != 0) {
+            if (isPlayer1) {
+                youWon();
+            }
+            else if (isPlayer2) {
+                youLost();
+            }
+        }
+    });
+
+    dbP2Score.on("value", function(snap){
+        if (snap.val() != 0) {
+            if (isPlayer1) {
+                youLost();
+            }
+            else if (isPlayer2) {
+                youWon();
+            }
+        }
+    });
+
+    dbTieScore.on("value", function(snap){
+        if (snap.val() != 0) {
+            if (isPlayer1) {
+                youTied();
+            }
+            else if (isPlayer2) {
+                youTied();
+            }
+        }
+    });
+    
 });
 
