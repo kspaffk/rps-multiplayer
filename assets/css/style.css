@@ -5,11 +5,11 @@ body {
 }
 
 form {
-    text-align: center;
+    margin-left: 25px;
 }
 
 label {
-    padding: 10px;
+    padding: 5px;
     margin: 5px;
 }
 
