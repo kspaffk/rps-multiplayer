@@ -42,6 +42,7 @@ $(document).ready(function() {
                 player2: "none"
             });
             assignRPStoPlayer();
+            // startTimer();
         } else {
             clearRPSDiv();
         }
@@ -72,6 +73,7 @@ $(document).ready(function() {
             if (snap.val().players != undefined) {
                 // if both players exist
                 if (snap.val().players.player1 != undefined && snap.val().players.player2 != undefined) {
+                    if (isPlayer1 || isPlayer2) {
                         // has the game started with 2 players?
                         hasInitialized = true;
                         console.log("--!! initialized is true !!--")
@@ -84,6 +86,9 @@ $(document).ready(function() {
                         $(".player2").prepend(p2Name);
                         // initializie scores
                         initializeScores();
+                        // create timer divs
+                        // createTimers();
+                    }
                     return "both";
                 }
                 // neither players are chosen
@@ -300,29 +305,48 @@ $(document).ready(function() {
         $(".rps-button").on("click", rpsClick)
     }
 
+    // clear the rock paper scissors buttons 
     function clearRPSDiv() {
         $(".rps-div").remove();
     }
 
-    // create a timer for the game
-    function createTimer() {
-        var seconds = 5;
+    // // create a timer for the game
+    // function createTimers() {
+    //     // create divs for timers and attach them to players
+    //     for (var i = 1; i < 3; i++) {
+    //         var timerDiv = $("<div>").addClass("timer");
+    //         var nameId = "#player" + i + "-name";
+    //         $(nameId).append(timerDiv);
+    //     }
 
-        for (var i = 1; i < 3; i++) {
-            var timerDiv = $("<div>").addClass("timer");
-            var nameId = "#player" + i + "-name";
-            $(nameId).append(timerDiv);
-        }
+    // }
 
-        timer = setInterval(function(){
-            $(".timer").text(seconds);
-            seconds--;
+    // // start the timer
+    // function startTimer() {
+    //     // set the number of seconds to countdown
+    //     var seconds = 5;
+    //     // start timer until it reaches 0
+    //     timer = setInterval(function(){
+    //         $(".timer").text(seconds);
+    //         seconds--;
 
-            if (seconds < 0) {
-                clearInterval(timer);
-            }
-        }, 1000);
-    }
+    //         if (seconds < 0) {
+    //             clearInterval(timer);
+    //             seconds = 5;
+    //             $(".rps-div").remove();
+
+    //             dbScores.once("value").then(function(snap) {
+    //                 var pTie = snap.val().tie
+    //                 pTie++;
+    //                 dbScores.update({
+    //                     tie: pTie
+    //                 });
+    //             });
+
+    //         }
+    //     }, 1000);
+
+    // }
 
     // update db when rock paper scissors are clicked
     function rpsClick() {
