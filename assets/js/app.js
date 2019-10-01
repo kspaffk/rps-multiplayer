@@ -98,8 +98,7 @@ $(document).ready(function() {
                 else if (snap.val().players.player1 === undefined && snap.val().players.player2 === undefined) {
                     // clear out the interval timer if exists
                     clearInterval(timer);
-                    $(".timer").remove();
-                    $(".chatbox").remove();
+                    $(".player-section").empty();
                     // neither player has joined - request both players
                     requestPlayer();
                     // add notice that we are waiting on players
@@ -110,8 +109,10 @@ $(document).ready(function() {
                 else if (snap.val().players.player1 != undefined) {
                     // clear out the interval timer if exists
                     clearInterval(timer);
-                    $(".timer").remove();
-                    $(".chatbox").remove();
+                    $(".player-section").empty();
+                    // $(".timer").remove();
+                    // $(".chatbox").remove();
+                    // $(".announcement").remove();
                     // add notice that we are waiting on players
                     waitingForPlayers(1);
                     // if user is not player 1, request player 
@@ -126,8 +127,7 @@ $(document).ready(function() {
                 else {
                     // clear out the interval timer if exists
                     clearInterval(timer);
-                    $(".timer").remove();
-                    $(".chatbox").remove();
+                    $(".player-section").empty();
                     // add notice that we are waiting on players
                     waitingForPlayers(1);
                     // if user is not player 2, request player
@@ -141,8 +141,7 @@ $(document).ready(function() {
             } else {
                 // clear out the interval timer if exists
                 clearInterval(timer);
-                $(".timer").remove();
-                $(".chatbox").remove();
+                $(".player-section").empty();
                 // neither player has joined - request players
                 requestPlayer();
                 // add notice that we are waiting on players
@@ -258,7 +257,7 @@ $(document).ready(function() {
     // create the rock paper scissors buttons
     function createRPS() {
         var rpsDiv = $("<div>").addClass("rps-choice");
-        var rpsTextDiv = $("<div>").addClass("announcement").text("Choose rock, paper or scissors within 6 seconds!");
+        var announcement = $("<div>").addClass("announcement").text("Choose rock, paper or scissors within 6 seconds!");
         var rock = $("<img>")
             .addClass("rock rps-button")
             .attr({
@@ -280,8 +279,9 @@ $(document).ready(function() {
                 alt: "scissors"
             })
             .text("Scissors");
-
-        rpsDiv.append(rpsTextDiv, rock, paper, scissors);
+        
+        $(".player-section").append(announcement);
+        rpsDiv.append(rock, paper, scissors);
 
         return rpsDiv;
     }
@@ -348,29 +348,31 @@ $(document).ready(function() {
             seconds = 6;
             // start timer until it reaches 0
             timer = setInterval(function(){
-                $(".timer-text").text(seconds);
+                $(".timer-text").html("<span class='countdown'>" + seconds + "</span>");
                 seconds--;
 
                 if (seconds < 0) {
                     clearInterval(timer);
                     clearRPSDiv();
-                    console.log("---- timeout ----")
-                    $(".timer-text").text("Time's up!!");
+                    $(".timer-text").html("<span class='times-up'>Time's up!!</span>");
                     setTimeout(function() {
                         if (isPlayer1) {
                             database.ref().once("value").then(function(snap) {
+                                // if only player 1 answers - player 1 wins
                                 if (snap.val().answers.player1 != "none") {
                                     var ply1score = snap.val().scores.player1;
                                     ply1score++; 
                                     dbScores.update({
                                         player1: ply1score
                                     });
+                                // if only player 2 answers - player 2 wins
                                 } else if (snap.val().answers.player2 != "none") {
                                     var ply2score = snap.val().scores.player2;
                                     ply2score++;
                                     dbScores.update({
                                         player2: ply2score
                                     });
+                                // tie if no one answers
                                 } else {
                                     var pTie = snap.val().scores.tie;
                                     pTie++;

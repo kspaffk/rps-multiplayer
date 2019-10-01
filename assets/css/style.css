@@ -95,25 +95,6 @@ header {
     grid-row: 1 / 2;
 }
 
-.timer {
-    grid-column: 1 / 2;
-    grid-row: 3 / 4;
-    margin-top: 40px;
-    margin-left: 40px;
-}
-
-.timer-text {
-    font-size: 100px;
-    padding-top: 50px;
-
-}
-
-.announcement {
-    font-size: 26px;
-    color: #dc0505;
-    margin: 15px;
-}
-
 .rps-button {
     width: 100px;
     margin: 25px;
@@ -168,4 +149,32 @@ header {
     font-size: 16px;
     border: none;
     margin: 5px;
+}
+
+.announcement {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+    font-size: 26px;
+    color: #dc0505;
+    margin: 15px;
+}
+
+.timer {
+    grid-column: 1 / 2;
+    grid-row: 3 / 4;
+    margin-top: 40px;
+}
+
+.timer-text {
+    display: flex;
+    justify-content: center;
+}
+
+.countdown {
+    font-size: 100px;
+}
+
+.times-up {
+    font-size: 60px;
+    color: #dc0505;
 }
