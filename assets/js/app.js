@@ -69,6 +69,16 @@ $(document).ready(function() {
     // add how many people are on the website here
     connectionsRef.on("value", function(snap) {
         console.log(snap.numChildren());
+        var connections = $("<div>").addClass("connections")
+        if (snap.numChildren() === 1)
+            connections.text("There is currently " + snap.numChildren() + " person connected.");
+        else {
+            connections.text("There are currently " + snap.numChildren() + " people connected.");
+        }
+
+        $(".connections").remove();
+        $("header").append(connections);
+        
     });
 
     // function to check the status of the game

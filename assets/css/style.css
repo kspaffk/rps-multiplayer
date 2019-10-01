@@ -5,9 +5,20 @@ body {
 }
 
 header {
+    display: grid;
     background-color: #0f1114;
-    display: flex;
     justify-content: center;
+}
+
+.header-img {
+    display: block;
+    border-bottom: solid 1px #4444f2;
+}
+
+.connections {
+    text-align: center;
+    color: white;
+    background-color: #0f1114;
 }
 
 .player-form {
