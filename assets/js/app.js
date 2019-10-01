@@ -59,7 +59,6 @@ $(document).ready(function() {
     
     // get connected info of clients
     connectedRef.on("value", function(snap) {
-        console.log("connected ref", snap.val());
         if (snap.val()) {
             var con = connectionsRef.push(true);
             con.onDisconnect().remove();
@@ -68,7 +67,6 @@ $(document).ready(function() {
     
     // add how many people are on the website here
     connectionsRef.on("value", function(snap) {
-        console.log(snap.numChildren());
         var connections = $("<div>").addClass("connections")
         if (snap.numChildren() === 1)
             connections.text("There is currently " + snap.numChildren() + " person connected.");
@@ -180,7 +178,6 @@ $(document).ready(function() {
     // create player 1 field for new players
     function requestPlayer() {
         // create specific attr and classes for player 1
-        console.log("/player1 doesnt exist");
         $(".player-section").empty();
         var playerForm = createPlayerForm();
         $(".player-section").append(playerForm);
@@ -310,7 +307,6 @@ $(document).ready(function() {
             value: "scissors"
         });
 
-        console.log("-----running assignRPS -----")
         $(".rps-button").on("click", rpsClick)
     }
 
@@ -321,8 +317,6 @@ $(document).ready(function() {
     
     // update db when rock paper scissors are clicked
     function rpsClick() {
-        console.log("----- value of button -----")
-        console.log(this.alt)
         if (isPlayer1) {
             $(".rps-choice").remove();
             dbAnswers.update({
@@ -393,7 +387,6 @@ $(document).ready(function() {
                             });
                         }
                         if (isPlayer2) {
-                            console.log("---waiting for timeout---");
                         }
                     }, 1000);
 
@@ -542,7 +535,6 @@ $(document).ready(function() {
         $(".player-section").append(chatbox);
         
         if (!isPlayer1 && !isPlayer2) {
-            console.log("ran is not player1 or player2 for chatbox watcher")
             $(".chatbox").attr("id", "watcher");
         }
 
@@ -575,7 +567,6 @@ $(document).ready(function() {
 
                 var scrollHeight;
                 scrollHeight = $(".chatview").prop('scrollHeight');
-                console.log(scrollHeight + " is scrollHeight");
                 $(".chatview").scrollTop(scrollHeight);
                 $(".chat-input").val("");
                 
